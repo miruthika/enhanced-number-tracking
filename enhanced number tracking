@@ -1,0 +1,47 @@
+import gradio as gr
+import pycountry
+from phone_iso3166.country import phone_country
+
+def track_phone_number(phone_number):
+    """
+    Tracks the country of a phone number using its country code.
+    
+    Parameters:
+        phone_number (str): Phone number including the '+' sign and country code.
+    
+    Returns:
+        str: Country name and country code if valid, or error message if invalid.
+    """
+    if not phone_number.startswith('+') or not phone_number[1:].isdigit():
+        return "Invalid format. Please enter the phone number in the format: +<country_code><number> (e.g., +15551234567)."
+    
+    try:
+        country_alpha2 = phone_country(phone_number)
+        country_data = pycountry.countries.get(alpha_2=country_alpha2)
+        
+        if country_data:
+            country_name = getattr(country_data, "official_name", country_data.name)
+            return f"Country: {country_name}\nISO Alpha-2 Code: {country_alpha2}"
+        else:
+            return "Could not determine the country for this phone number."
+    except Exception as e:
+        return f"Error: Unable to process the phone number. Details: {e}"
+
+# Define the Gradio app
+interface = gr.Interface(
+    fn=track_phone_number,
+    inputs=gr.Textbox(
+        label="Enter a Phone Number",
+        placeholder="Example: +15551234567",
+        lines=1
+    ),
+    outputs=gr.Textbox(
+        label="Country Details",
+        lines=3
+    ),
+    title="Enhanced Phone Number Tracker",
+    description="Input a phone number with the country code (e.g., +15551234567). This tool identifies the country of origin based on the number."
+)
+
+# Launch the app
+interface.launch()
